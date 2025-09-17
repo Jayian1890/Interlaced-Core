@@ -108,6 +108,95 @@ namespace interlaced::core::network {
      * Note: This is a simplified implementation for demonstration purposes.
      */
     class Network {
+    private:
+        /**
+         * @brief Initialize Windows Sockets API (Windows only)
+         * 
+         * @return true if initialization successful or not needed, false on error
+         */
+        static bool initialize_winsock() {
+#ifdef _WIN32
+            WSADATA wsaData;
+            return WSAStartup(MAKEWORD(2, 2), &wsaData) == 0;
+#else
+            return true; // No initialization needed on Unix-like systems
+#endif
+        }
+        
+        /**
+         * @brief Cleanup Windows Sockets API (Windows only)
+         */
+        static void cleanup_winsock() {
+#ifdef _WIN32
+            WSACleanup();
+#endif
+        }
+        
+        /**
+         * @brief Set socket timeout values
+         * 
+         * @param sockfd Socket file descriptor
+         * @param timeout_seconds Timeout in seconds
+         */
+        static void set_socket_timeout(int sockfd, int timeout_seconds) {
+#ifdef _WIN32
+            DWORD timeout = timeout_seconds * 1000;
+            setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout, sizeof(timeout));
+            setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, (const char*)&timeout, sizeof(timeout));
+#else
+            struct timeval timeout;
+            timeout.tv_sec = timeout_seconds;
+            timeout.tv_usec = 0;
+            setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout, sizeof(timeout));
+            setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, (const char*)&timeout, sizeof(timeout));
+#endif
+        }
+        
+        /**
+         * @brief Close socket connection
+         * 
+         * @param sockfd Socket file descriptor
+         */
+        static void close_socket(int sockfd) {
+#ifdef _WIN32
+            closesocket(sockfd);
+#else
+            close(sockfd);
+#endif
+        }
+        
+        /**
+         * @brief Get connection error details
+         * 
+         * @param is_timeout Set to true if the error was a timeout
+         * @param is_refused Set to true if the connection was refused
+         * @return Appropriate error code
+         */
+        static int get_connection_error(bool& is_timeout, bool& is_refused) {
+            is_timeout = false;
+            is_refused = false;
+            
+#ifdef _WIN32
+            int error = WSAGetLastError();
+            if (error == WSAETIMEDOUT) {
+                is_timeout = true;
+                return 3; // Connection timeout
+            } else if (error == WSAECONNREFUSED) {
+                is_refused = true;
+                return 4; // Connection refused
+            }
+#else
+            if (errno == ETIMEDOUT) {
+                is_timeout = true;
+                return 3; // Connection timeout
+            } else if (errno == ECONNREFUSED) {
+                is_refused = true;
+                return 4; // Connection refused
+            }
+#endif
+            return 5; // General network error
+        }
+        
     public:
         /**
          * @brief Resolve hostname to IP address
@@ -132,12 +221,9 @@ namespace interlaced::core::network {
             }
             
             // Platform-specific socket initialization
-#ifdef _WIN32
-            WSADATA wsaData;
-            if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+            if (!initialize_winsock()) {
                 return NetworkResult(false, 2, "Failed to initialize Winsock");
             }
-#endif
             
             // Resolve hostname to IP address
             struct addrinfo hints, *result = nullptr;
@@ -149,9 +235,7 @@ namespace interlaced::core::network {
             
             int status = getaddrinfo(hostname.c_str(), nullptr, &hints, &result);
             if (status != 0) {
-#ifdef _WIN32
-                WSACleanup();
-#endif
+                cleanup_winsock();
                 return NetworkResult(false, 2, "Hostname resolution failed: " + std::string(gai_strerror(status)));
             }
             
@@ -173,9 +257,7 @@ namespace interlaced::core::network {
             
             // Clean up
             freeaddrinfo(result);
-#ifdef _WIN32
-            WSACleanup();
-#endif
+            cleanup_winsock();
             
             if (ip_address.empty()) {
                 return NetworkResult(false, 3, "No addresses found for hostname");
@@ -218,12 +300,9 @@ namespace interlaced::core::network {
             std::string ip_address = resolve_result.message;
             
             // Platform-specific socket initialization
-#ifdef _WIN32
-            WSADATA wsaData;
-            if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+            if (!initialize_winsock()) {
                 return NetworkResult(false, 5, "Failed to initialize Winsock");
             }
-#endif
             
             // Create socket based on IP address format (IPv4 or IPv6)
             int sockfd;
@@ -237,9 +316,7 @@ namespace interlaced::core::network {
                 // IPv6
                 sockfd = socket(AF_INET6, SOCK_STREAM, 0);
                 if (sockfd < 0) {
-#ifdef _WIN32
-                    WSACleanup();
-#endif
+                    cleanup_winsock();
                     return NetworkResult(false, 5, "Failed to create IPv6 socket");
                 }
                 
@@ -248,12 +325,8 @@ namespace interlaced::core::network {
                 addr6.sin6_port = htons(80);
                 
                 if (inet_pton(AF_INET6, ip_address.c_str(), &addr6.sin6_addr) <= 0) {
-#ifdef _WIN32
-                    closesocket(sockfd);
-                    WSACleanup();
-#else
-                    close(sockfd);
-#endif
+                    close_socket(sockfd);
+                    cleanup_winsock();
                     return NetworkResult(false, 2, "Invalid IPv6 address format");
                 }
                 
@@ -263,9 +336,7 @@ namespace interlaced::core::network {
                 // IPv4
                 sockfd = socket(AF_INET, SOCK_STREAM, 0);
                 if (sockfd < 0) {
-#ifdef _WIN32
-                    WSACleanup();
-#endif
+                    cleanup_winsock();
                     return NetworkResult(false, 5, "Failed to create IPv4 socket");
                 }
                 
@@ -274,12 +345,8 @@ namespace interlaced::core::network {
                 addr4.sin_port = htons(80);
                 
                 if (inet_pton(AF_INET, ip_address.c_str(), &addr4.sin_addr) <= 0) {
-#ifdef _WIN32
-                    closesocket(sockfd);
-                    WSACleanup();
-#else
-                    close(sockfd);
-#endif
+                    close_socket(sockfd);
+                    cleanup_winsock();
                     return NetworkResult(false, 2, "Invalid IPv4 address format");
                 }
                 
@@ -288,46 +355,25 @@ namespace interlaced::core::network {
             }
             
             // Set socket timeout (5 seconds)
-#ifdef _WIN32
-            DWORD timeout = 5000;
-            setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout, sizeof(timeout));
-            setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, (const char*)&timeout, sizeof(timeout));
-#else
-            struct timeval timeout;
-            timeout.tv_sec = 5;
-            timeout.tv_usec = 0;
-            setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout, sizeof(timeout));
-            setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, (const char*)&timeout, sizeof(timeout));
-#endif
+            set_socket_timeout(sockfd, 5);
             
             // Attempt to connect
             int status = connect(sockfd, (struct sockaddr*)addr_ptr, addr_len);
             
             // Clean up
-#ifdef _WIN32
-            closesocket(sockfd);
-            WSACleanup();
-#else
-            close(sockfd);
-#endif
+            close_socket(sockfd);
+            cleanup_winsock();
             
             // Check connection result
             if (status < 0) {
-#ifdef _WIN32
-                int error = WSAGetLastError();
-                if (error == WSAETIMEDOUT) {
+                bool is_timeout, is_refused;
+                int error_code = get_connection_error(is_timeout, is_refused);
+                if (is_timeout) {
                     return NetworkResult(false, 3, "Connection timeout");
-                } else if (error == WSAECONNREFUSED) {
+                } else if (is_refused) {
                     return NetworkResult(false, 4, "Connection refused");
                 }
-#else
-                if (errno == ETIMEDOUT) {
-                    return NetworkResult(false, 3, "Connection timeout");
-                } else if (errno == ECONNREFUSED) {
-                    return NetworkResult(false, 4, "Connection refused");
-                }
-#endif
-                return NetworkResult(false, 5, "General network error");
+                return NetworkResult(false, error_code, "General network error");
             }
             
             return NetworkResult(true, 0, "Host is reachable");
@@ -405,12 +451,9 @@ namespace interlaced::core::network {
             std::string port_str = std::to_string(port);
             
             // Platform-specific socket initialization
-#ifdef _WIN32
-            WSADATA wsaData;
-            if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+            if (!initialize_winsock()) {
                 return NetworkResult(false, 8, "Failed to initialize Winsock");
             }
-#endif
             
             // Resolve hostname to IP address
             struct addrinfo hints, *result = nullptr;
@@ -420,9 +463,7 @@ namespace interlaced::core::network {
             
             int status = getaddrinfo(host.c_str(), port_str.c_str(), &hints, &result);
             if (status != 0) {
-#ifdef _WIN32
-                WSACleanup();
-#endif
+                cleanup_winsock();
                 return NetworkResult(false, 8, "Hostname resolution failed: " + std::string(gai_strerror(status)));
             }
             
@@ -430,35 +471,19 @@ namespace interlaced::core::network {
             int sockfd = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
             if (sockfd < 0) {
                 freeaddrinfo(result);
-#ifdef _WIN32
-                WSACleanup();
-#endif
+                cleanup_winsock();
                 return NetworkResult(false, 8, "Failed to create socket");
             }
             
             // Set socket timeout (30 seconds)
-#ifdef _WIN32
-            DWORD timeout = 30000;
-            setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout, sizeof(timeout));
-            setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, (const char*)&timeout, sizeof(timeout));
-#else
-            struct timeval timeout;
-            timeout.tv_sec = 30;
-            timeout.tv_usec = 0;
-            setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout, sizeof(timeout));
-            setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, (const char*)&timeout, sizeof(timeout));
-#endif
+            set_socket_timeout(sockfd, 30);
             
             // Attempt to connect
             status = connect(sockfd, result->ai_addr, result->ai_addrlen);
             if (status < 0) {
                 freeaddrinfo(result);
-#ifdef _WIN32
-                closesocket(sockfd);
-                WSACleanup();
-#else
-                close(sockfd);
-#endif
+                close_socket(sockfd);
+                cleanup_winsock();
                 return NetworkResult(false, 8, "Failed to connect to host");
             }
             
@@ -470,12 +495,8 @@ namespace interlaced::core::network {
             status = send(sockfd, request.c_str(), request.length(), 0);
             if (status < 0) {
                 freeaddrinfo(result);
-#ifdef _WIN32
-                closesocket(sockfd);
-                WSACleanup();
-#else
-                close(sockfd);
-#endif
+                close_socket(sockfd);
+                cleanup_winsock();
                 return NetworkResult(false, 8, "Failed to send HTTP request");
             }
             
@@ -483,12 +504,8 @@ namespace interlaced::core::network {
             FILE* file = fopen(destination.c_str(), "wb");
             if (!file) {
                 freeaddrinfo(result);
-#ifdef _WIN32
-                closesocket(sockfd);
-                WSACleanup();
-#else
-                close(sockfd);
-#endif
+                close_socket(sockfd);
+                cleanup_winsock();
                 return NetworkResult(false, 7, "Failed to create output file");
             }
             
@@ -518,12 +535,8 @@ namespace interlaced::core::network {
                                 if (code >= 400) {
                                     fclose(file);
                                     freeaddrinfo(result);
-#ifdef _WIN32
-                                    closesocket(sockfd);
-                                    WSACleanup();
-#else
-                                    close(sockfd);
-#endif
+                                    close_socket(sockfd);
+                                    cleanup_winsock();
                                     return NetworkResult(false, 9, "HTTP error: " + status_code);
                                 }
                             }
@@ -540,12 +553,8 @@ namespace interlaced::core::network {
             // Clean up
             fclose(file);
             freeaddrinfo(result);
-#ifdef _WIN32
-            closesocket(sockfd);
-            WSACleanup();
-#else
-            close(sockfd);
-#endif
+            close_socket(sockfd);
+            cleanup_winsock();
             
             if (status < 0) {
                 return NetworkResult(false, 8, "Network error during download");
