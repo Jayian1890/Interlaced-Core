@@ -247,9 +247,9 @@ void test_get_network_interfaces() {
     
     // Check that we have at least one common interface
     bool has_common_interface = false;
-    for (const auto& interface : interfaces) {
-        if (interface == "eth0" || interface == "wlan0" || interface == "lo" || 
-            interface == "Ethernet" || interface == "Wi-Fi" || interface == "Loopback") {
+    for (const auto& iface : interfaces) {
+        if (iface == "eth0" || iface == "wlan0" || iface == "lo" || 
+            iface == "Ethernet" || iface == "Wi-Fi" || iface == "Loopback") {
             has_common_interface = true;
             break;
         }
