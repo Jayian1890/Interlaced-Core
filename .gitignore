@@ -3,6 +3,7 @@ build/
 cmake-build-*/
 
 # IDE files
+.zed/
 .cache/
 .vscode/
 .idea/
