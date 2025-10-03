@@ -1,6 +1,6 @@
 /*
  * Interlaced Core Library
- * Copyright (c) 2025 Your Name or Organization
+ * Copyright (c) 2025 Interlaced Pixel
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -45,7 +45,7 @@ inline void localtime_threadsafe(const std::time_t* time, std::tm* tm) {
 
 /**
  * @brief Core logging utilities for the Interlaced framework
- * 
+ *
  * This module provides a thread-safe logging system with multiple log levels
  * and configurable output destinations.
  */
@@ -53,7 +53,7 @@ namespace interlaced::core::logging {
 
     /**
      * @brief Log levels for categorizing log messages by severity
-     * 
+     *
      * Log levels are ordered by severity, with DEBUG being the lowest
      * and LOG_ERROR being the highest. Messages are only logged if their
      * level is greater than or equal to the current log level setting.
@@ -67,7 +67,7 @@ namespace interlaced::core::logging {
 
     /**
      * @brief Convert a LogLevel enum to its string representation
-     * 
+     *
      * @param level The LogLevel to convert
      * @return const char* String representation of the LogLevel
      */
@@ -116,7 +116,7 @@ namespace interlaced::core::logging {
     public:
         /**
          * @brief Constructor for RotatingFileLogger
-         * 
+         *
          * @param base_filename The base filename for log files
          * @param max_file_size Maximum size of each log file (in bytes)
          * @param max_files Maximum number of log files to keep
@@ -130,7 +130,7 @@ namespace interlaced::core::logging {
 
         /**
          * @brief Constructor for RotatingFileLogger with time-based rotation
-         * 
+         *
          * @param base_filename The base filename for log files
          * @param rotation_hours Hours between log rotations
          * @param max_files Maximum number of log files to keep
@@ -144,7 +144,7 @@ namespace interlaced::core::logging {
 
         /**
          * @brief Write a message to the log file
-         * 
+         *
          * @param message The message to write
          */
         void write(const std::string& message) {
@@ -167,12 +167,12 @@ namespace interlaced::core::logging {
 
                 current_file_ << message << std::endl;
                 current_file_.flush();
-                
+
                 // Update file size for size-based rotation
                 if (strategy_ == RotationStrategy::SIZE) {
                     current_file_size_ += message.length() + 1; // +1 for newline
                 }
-                
+
                 // Check if the stream is in a good state
                 if (!current_file_.good()) {
                     // If the stream is not good, try to reset it
@@ -208,7 +208,7 @@ namespace interlaced::core::logging {
 
         /**
          * @brief Check if we should rotate the log file
-         * 
+         *
          * @return true if we should rotate, false otherwise
          */
         bool should_rotate() {
@@ -237,10 +237,10 @@ namespace interlaced::core::logging {
                 for (int i = max_files_ - 1; i > 0; --i) {
                     std::string old_name = base_filename_ + "." + std::to_string(i);
                     std::string new_name = base_filename_ + "." + std::to_string(i + 1);
-                    
+
                     // Remove the new file if it exists
                     std::remove(new_name.c_str());
-                    
+
                     // Rename the old file to new name
                     std::rename(old_name.c_str(), new_name.c_str());
                 }
@@ -267,7 +267,7 @@ namespace interlaced::core::logging {
     class LogFormatter {
     public:
         virtual ~LogFormatter() = default;
-        virtual std::string format(LogLevel level, const std::string& message, 
+        virtual std::string format(LogLevel level, const std::string& message,
                                   const std::tm& time_info, const char* file = nullptr, int line = 0) = 0;
     };
 
@@ -280,19 +280,19 @@ namespace interlaced::core::logging {
         std::string prefix_;
 
     public:
-        DefaultLogFormatter(TimestampFormat format = TimestampFormat::STANDARD, 
+        DefaultLogFormatter(TimestampFormat format = TimestampFormat::STANDARD,
                            const std::string& prefix = "")
             : timestamp_format_(format), prefix_(prefix) {}
 
-        std::string format(LogLevel level, const std::string& message, 
+        std::string format(LogLevel level, const std::string& message,
                           const std::tm& time_info, const char* file = nullptr, int line = 0) override {
             std::ostringstream oss;
-            
+
             // Add prefix if specified
             if (!prefix_.empty()) {
                 oss << prefix_ << " ";
             }
-            
+
             // Add timestamp based on format
             switch (timestamp_format_) {
                 case TimestampFormat::STANDARD: {
@@ -312,13 +312,13 @@ namespace interlaced::core::logging {
                     // No timestamp
                     break;
             }
-            
+
             // Add log level
             oss << "[" << log_level_to_string(level) << "] ";
-            
+
             // Add message
             oss << message;
-            
+
             // Add file and line information if provided
             if (file && line > 0) {
                 // Extract just the filename from the full path
@@ -330,17 +330,17 @@ namespace interlaced::core::logging {
                 }
                 oss << " (" << filename << ":" << line << ")";
             }
-            
+
             return oss.str();
         }
     };
 
     /**
      * @brief Thread-safe logging utility class
-     * 
+     *
      * The Logger class provides methods for logging messages at different
      * severity levels. All logging operations are thread-safe.
-     * 
+     *
      * Example usage:
      * @code
      * using namespace interlaced::core::logging;
@@ -349,19 +349,19 @@ namespace interlaced::core::logging {
      * Logger::warning("This is a warning message");
      * Logger::error("An error occurred");
      * @endcode
-     * 
+     *
      * For more detailed logging with file and line information:
      * @code
      * LOG_INFO("Application started");
      * LOG_WARNING("This is a warning message");
      * LOG_ERROR("An error occurred");
      * @endcode
-     * 
+     *
      * For structured logging with key-value pairs:
      * @code
      * Logger::info("User logged in", "user_id", 12345, "ip_address", "192.168.1.1");
      * @endcode
-     * 
+     *
      * For file logging with rotation:
      * @code
      * Logger::set_file_logging("app.log", 10485760, 5); // 10MB max size, 5 files
@@ -380,21 +380,21 @@ namespace interlaced::core::logging {
     public:
         /**
          * @brief Set the minimum log level
-         * 
+         *
          * Messages with a level lower than the current level will not be logged.
-         * 
+         *
          * @param level The minimum LogLevel to display
          */
         static void set_level(LogLevel level) {
             std::lock_guard<std::mutex> lock(log_mutex);
             current_level = level;
         }
-        
+
         /**
          * @brief Set custom output streams for logging
-         * 
+         *
          * Allows redirection of log output to custom streams (e.g., files).
-         * 
+         *
          * @param output The output stream for LOG_INFO and LOG_DEBUG messages
          * @param error The output stream for LOG_WARNING and LOG_ERROR messages
          */
@@ -403,10 +403,10 @@ namespace interlaced::core::logging {
             output_stream = &output;
             error_stream = &error;
         }
-        
+
         /**
          * @brief Set up file logging with size-based rotation
-         * 
+         *
          * @param filename The base filename for log files
          * @param max_file_size Maximum size of each log file (in bytes)
          * @param max_files Maximum number of log files to keep
@@ -415,10 +415,10 @@ namespace interlaced::core::logging {
             std::lock_guard<std::mutex> lock(log_mutex);
             file_logger = std::make_unique<RotatingFileLogger>(filename, max_file_size, max_files);
         }
-        
+
         /**
          * @brief Set up file logging with time-based rotation
-         * 
+         *
          * @param filename The base filename for log files
          * @param rotation_hours Hours between log rotations
          * @param max_files Maximum number of log files to keep
@@ -427,20 +427,20 @@ namespace interlaced::core::logging {
             std::lock_guard<std::mutex> lock(log_mutex);
             file_logger = std::make_unique<RotatingFileLogger>(filename, rotation_hours, max_files);
         }
-        
+
         /**
          * @brief Set a custom log formatter
-         * 
+         *
          * @param custom_formatter The custom formatter to use
          */
         static void set_formatter(std::unique_ptr<LogFormatter> custom_formatter) {
             std::lock_guard<std::mutex> lock(log_mutex);
             formatter = std::move(custom_formatter);
         }
-        
+
         /**
          * @brief Log a message at the specified level
-         * 
+         *
          * @param level The LogLevel for this message
          * @param message The message to log
          */
@@ -452,28 +452,28 @@ namespace interlaced::core::logging {
                     return;
                 }
             }
-            
+
             // Format the message outside the critical section
             const auto now = std::chrono::system_clock::now();
             const std::time_t now_time_t = std::chrono::system_clock::to_time_t(now);
-            
+
             // Convert to tm struct in a thread-safe way
             std::tm local_tm;
             localtime_threadsafe(&now_time_t, &local_tm);
-            
+
             std::string formatted_message;
-            
+
             // Use custom formatter if available
             if (formatter) {
                 formatted_message = formatter->format(level, message, local_tm);
             } else {
                 std::ostringstream oss;
-                oss << "[" << std::put_time(&local_tm, "%Y-%m-%d %H:%M:%S") 
-                    << "] [" << log_level_to_string(level) << "] " 
+                oss << "[" << std::put_time(&local_tm, "%Y-%m-%d %H:%M:%S")
+                    << "] [" << log_level_to_string(level) << "] "
                     << message;
                 formatted_message = oss.str();
             }
-            
+
             // Output the message (critical section only for output)
             std::lock_guard<std::mutex> lock(log_mutex);
             if (file_logger) {
@@ -483,7 +483,7 @@ namespace interlaced::core::logging {
                     // Choose output stream based on log level
                     std::ostream& out_stream = (level == LOG_ERROR) ? *error_stream : *output_stream;
                     out_stream << formatted_message << std::endl;
-                    
+
                     // Check if the stream is in a good state
                     if (!out_stream.good()) {
                         // If the stream is not good, try to reset it
@@ -500,10 +500,10 @@ namespace interlaced::core::logging {
                 }
             }
         }
-        
+
         /**
          * @brief Log a message with file and line information
-         * 
+         *
          * @param level The LogLevel for this message
          * @param message The message to log
          * @param file The source file name (typically __FILE__)
@@ -517,17 +517,17 @@ namespace interlaced::core::logging {
                     return;
                 }
             }
-            
+
             // Format the message outside the critical section
             const auto now = std::chrono::system_clock::now();
             const std::time_t now_time_t = std::chrono::system_clock::to_time_t(now);
-            
+
             // Convert to tm struct in a thread-safe way
             std::tm local_tm;
             localtime_threadsafe(&now_time_t, &local_tm);
-            
+
             std::string formatted_message;
-            
+
             // Use custom formatter if available
             if (formatter) {
                 formatted_message = formatter->format(level, message, local_tm, file, line);
@@ -539,15 +539,15 @@ namespace interlaced::core::logging {
                         filename = p + 1;
                     }
                 }
-                
+
                 // Format the message with file and line information
                 std::ostringstream oss;
-                oss << "[" << std::put_time(&local_tm, "%Y-%m-%d %H:%M:%S") 
-                    << "] [" << log_level_to_string(level) << "] " 
+                oss << "[" << std::put_time(&local_tm, "%Y-%m-%d %H:%M:%S")
+                    << "] [" << log_level_to_string(level) << "] "
                     << message << " (" << filename << ":" << line << ")";
                 formatted_message = oss.str();
             }
-            
+
             // Output the message (critical section only for output)
             std::lock_guard<std::mutex> lock(log_mutex);
             if (file_logger) {
@@ -557,7 +557,7 @@ namespace interlaced::core::logging {
                     // Choose output stream based on log level
                     std::ostream& out_stream = (level == LOG_ERROR) ? *error_stream : *output_stream;
                     out_stream << formatted_message << std::endl;
-                    
+
                     // Check if the stream is in a good state
                     if (!out_stream.good()) {
                         // If the stream is not good, try to reset it
@@ -574,19 +574,19 @@ namespace interlaced::core::logging {
                 }
             }
         }
-        
+
         /**
          * @brief Log a debug message
-         * 
+         *
          * @param message The debug message to log
          */
         static void debug(const std::string& message) {
             log(LOG_DEBUG, message);
         }
-        
+
         /**
          * @brief Log a debug message with file and line information
-         * 
+         *
          * @param message The debug message to log
          * @param file The source file name (typically __FILE__)
          * @param line The source line number (typically __LINE__)
@@ -594,19 +594,19 @@ namespace interlaced::core::logging {
         static void debug(const std::string& message, const char* file, int line) {
             log(LOG_DEBUG, message, file, line);
         }
-        
+
         /**
          * @brief Log an informational message
-         * 
+         *
          * @param message The informational message to log
          */
         static void info(const std::string& message) {
             log(LOG_INFO, message);
         }
-        
+
         /**
          * @brief Log an informational message with file and line information
-         * 
+         *
          * @param message The informational message to log
          * @param file The source file name (typically __FILE__)
          * @param line The source line number (typically __LINE__)
@@ -614,19 +614,19 @@ namespace interlaced::core::logging {
         static void info(const std::string& message, const char* file, int line) {
             log(LOG_INFO, message, file, line);
         }
-        
+
         /**
          * @brief Log a warning message
-         * 
+         *
          * @param message The warning message to log
          */
         static void warning(const std::string& message) {
             log(LOG_WARNING, message);
         }
-        
+
         /**
          * @brief Log a warning message with file and line information
-         * 
+         *
          * @param message The warning message to log
          * @param file The source file name (typically __FILE__)
          * @param line The source line number (typically __LINE__)
@@ -634,19 +634,19 @@ namespace interlaced::core::logging {
         static void warning(const std::string& message, const char* file, int line) {
             log(LOG_WARNING, message, file, line);
         }
-        
+
         /**
          * @brief Log an error message
-         * 
+         *
          * @param message The error message to log
          */
         static void error(const std::string& message) {
             log(LOG_ERROR, message);
         }
-        
+
         /**
          * @brief Log an error message with file and line information
-         * 
+         *
          * @param message The error message to log
          * @param file The source file name (typically __FILE__)
          * @param line The source line number (typically __LINE__)
@@ -654,11 +654,11 @@ namespace interlaced::core::logging {
         static void error(const std::string& message, const char* file, int line) {
             log(LOG_ERROR, message, file, line);
         }
-        
+
         // Structured logging with key-value pairs
         /**
          * @brief Log a message with structured key-value pairs
-         * 
+         *
          * @tparam Args Variadic template arguments for key-value pairs
          * @param level The LogLevel for this message
          * @param message The message to log
@@ -673,32 +673,32 @@ namespace interlaced::core::logging {
                     return;
                 }
             }
-            
+
             // Format the message outside the critical section
             const auto now = std::chrono::system_clock::now();
             const std::time_t now_time_t = std::chrono::system_clock::to_time_t(now);
-            
+
             // Convert to tm struct in a thread-safe way
             std::tm local_tm;
             localtime_threadsafe(&now_time_t, &local_tm);
-            
+
             std::string formatted_message;
-            
+
             // Use custom formatter if available
             if (formatter) {
                 formatted_message = formatter->format(level, message, local_tm);
             } else {
                 // Format the message with key-value pairs
                 std::ostringstream oss;
-                oss << "[" << std::put_time(&local_tm, "%Y-%m-%d %H:%M:%S") 
-                    << "] [" << log_level_to_string(level) << "] " 
+                oss << "[" << std::put_time(&local_tm, "%Y-%m-%d %H:%M:%S")
+                    << "] [" << log_level_to_string(level) << "] "
                     << message;
-                
+
                 // Add key-value pairs
                 format_key_value_pairs(oss, std::forward<Args>(args)...);
                 formatted_message = oss.str();
             }
-            
+
             // Output the message (critical section only for output)
             std::lock_guard<std::mutex> lock(log_mutex);
             if (file_logger) {
@@ -708,7 +708,7 @@ namespace interlaced::core::logging {
                     // Choose output stream based on log level
                     std::ostream& out_stream = (level == LOG_ERROR) ? *error_stream : *output_stream;
                     out_stream << formatted_message << std::endl;
-                    
+
                     // Check if the stream is in a good state
                     if (!out_stream.good()) {
                         // If the stream is not good, try to reset it
@@ -725,10 +725,10 @@ namespace interlaced::core::logging {
                 }
             }
         }
-        
+
         /**
          * @brief Log a debug message with structured key-value pairs
-         * 
+         *
          * @tparam Args Variadic template arguments for key-value pairs
          * @param message The message to log
          * @param args Key-value pairs to include in the log
@@ -737,10 +737,10 @@ namespace interlaced::core::logging {
         static void debug(const std::string& message, Args&&... args) {
             log(LOG_DEBUG, message, std::forward<Args>(args)...);
         }
-        
+
         /**
          * @brief Log an info message with structured key-value pairs
-         * 
+         *
          * @tparam Args Variadic template arguments for key-value pairs
          * @param message The message to log
          * @param args Key-value pairs to include in the log
@@ -749,10 +749,10 @@ namespace interlaced::core::logging {
         static void info(const std::string& message, Args&&... args) {
             log(LOG_INFO, message, std::forward<Args>(args)...);
         }
-        
+
         /**
          * @brief Log a warning message with structured key-value pairs
-         * 
+         *
          * @tparam Args Variadic template arguments for key-value pairs
          * @param message The message to log
          * @param args Key-value pairs to include in the log
@@ -761,10 +761,10 @@ namespace interlaced::core::logging {
         static void warning(const std::string& message, Args&&... args) {
             log(LOG_WARNING, message, std::forward<Args>(args)...);
         }
-        
+
         /**
          * @brief Log an error message with structured key-value pairs
-         * 
+         *
          * @tparam Args Variadic template arguments for key-value pairs
          * @param message The message to log
          * @param args Key-value pairs to include in the log
@@ -773,11 +773,11 @@ namespace interlaced::core::logging {
         static void error(const std::string& message, Args&&... args) {
             log(LOG_ERROR, message, std::forward<Args>(args)...);
         }
-        
+
         // Variadic template functions for type-safe logging
         /**
          * @brief Log a debug message with type-safe formatting
-         * 
+         *
          * @tparam Args Variadic template arguments
          * @param format The format string
          * @param args Arguments to format
@@ -788,10 +788,10 @@ namespace interlaced::core::logging {
             format_message(oss, format, std::forward<Args>(args)...);
             debug(oss.str());
         }
-        
+
         /**
          * @brief Log an info message with type-safe formatting
-         * 
+         *
          * @tparam Args Variadic template arguments
          * @param format The format string
          * @param args Arguments to format
@@ -802,10 +802,10 @@ namespace interlaced::core::logging {
             format_message(oss, format, std::forward<Args>(args)...);
             info(oss.str());
         }
-        
+
         /**
          * @brief Log a warning message with type-safe formatting
-         * 
+         *
          * @tparam Args Variadic template arguments
          * @param format The format string
          * @param args Arguments to format
@@ -816,10 +816,10 @@ namespace interlaced::core::logging {
             format_message(oss, format, std::forward<Args>(args)...);
             warning(oss.str());
         }
-        
+
         /**
          * @brief Log an error message with type-safe formatting
-         * 
+         *
          * @tparam Args Variadic template arguments
          * @param format The format string
          * @param args Arguments to format
@@ -830,10 +830,10 @@ namespace interlaced::core::logging {
             format_message(oss, format, std::forward<Args>(args)...);
             error(oss.str());
         }
-        
+
         /**
          * @brief Format a message with variadic arguments
-         * 
+         *
          * @tparam Args Variadic template arguments
          * @param oss The output string stream
          * @param format The format string
@@ -843,11 +843,11 @@ namespace interlaced::core::logging {
         static void format_message(std::ostringstream& oss, const char* format, Args&&... args) {
             format_helper(oss, format, std::forward<Args>(args)...);
         }
-        
+
     private:
         /**
          * @brief Format key-value pairs for structured logging
-         * 
+         *
          * @tparam Key Type of the key
          * @tparam Value Type of the value
          * @tparam Args Variadic template arguments
@@ -861,19 +861,19 @@ namespace interlaced::core::logging {
             oss << " " << key << "=" << value;
             format_key_value_pairs(oss, std::forward<Args>(args)...);
         }
-        
+
         /**
          * @brief Format key-value pairs for structured logging (base case)
-         * 
+         *
          * @param oss The output string stream
          */
         static void format_key_value_pairs(std::ostringstream& oss) {
             // Base case - no more key-value pairs
         }
-        
+
         /**
          * @brief Helper function to format messages with variadic arguments
-         * 
+         *
          * @tparam T Type of the first argument
          * @tparam Args Variadic template arguments
          * @param oss The output string stream
@@ -895,10 +895,10 @@ namespace interlaced::core::logging {
                 }
             }
         }
-        
+
         /**
          * @brief Helper function to format messages (base case)
-         * 
+         *
          * @param oss The output string stream
          * @param format The format string
          */
@@ -909,7 +909,7 @@ namespace interlaced::core::logging {
             }
         }
     };
-    
+
     // Static member definitions
     inline LogLevel Logger::current_level = LOG_INFO;
     inline std::mutex Logger::log_mutex;
@@ -920,7 +920,7 @@ namespace interlaced::core::logging {
 
     /**
      * @brief Convenience macro for logging debug messages with file and line information
-     * 
+     *
      * Usage: LOG_DEBUG("Message");
      */
     #ifndef INTERLACED_CORE_DISABLE_DEBUG_LOGS
@@ -928,24 +928,24 @@ namespace interlaced::core::logging {
     #else
     #define LOG_DEBUG(msg) (void)0
     #endif
-    
+
     /**
      * @brief Convenience macro for logging informational messages with file and line information
-     * 
+     *
      * Usage: LOG_INFO("Message");
      */
     #define LOG_INFO(msg) interlaced::core::logging::Logger::info(msg, __FILE__, __LINE__)
-    
+
     /**
      * @brief Convenience macro for logging warning messages with file and line information
-     * 
+     *
      * Usage: LOG_WARNING("Message");
      */
     #define LOG_WARNING(msg) interlaced::core::logging::Logger::warning(msg, __FILE__, __LINE__)
-    
+
     /**
      * @brief Convenience macro for logging error messages with file and line information
-     * 
+     *
      * Usage: LOG_ERROR("Message");
      */
     #define LOG_ERROR(msg) interlaced::core::logging::Logger::error(msg, __FILE__, __LINE__)

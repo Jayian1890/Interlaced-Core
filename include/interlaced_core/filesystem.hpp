@@ -1,6 +1,6 @@
 /*
  * Interlaced Core Library
- * Copyright (c) 2025 Your Name or Organization
+ * Copyright (c) 2025 Interlaced Pixel
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -54,7 +54,7 @@ namespace interlaced::core::filesystem {
 
     /**
      * @brief Filesystem utility functions
-     * 
+     *
      * This class provides static methods for common filesystem operations
      * such as checking file existence, reading/writing files, and creating directories.
      */
@@ -62,7 +62,7 @@ namespace interlaced::core::filesystem {
     public:
         /**
          * @brief Check if a file or directory exists
-         * 
+         *
          * @param path The path to check
          * @return true if the path exists, false otherwise
          */
@@ -70,10 +70,10 @@ namespace interlaced::core::filesystem {
             struct stat buffer;
             return (stat(path.c_str(), &buffer) == 0);
         }
-        
+
         /**
          * @brief Check if a path is a directory
-         * 
+         *
          * @param path The path to check
          * @return true if the path is a directory, false otherwise
          */
@@ -84,10 +84,10 @@ namespace interlaced::core::filesystem {
             }
             return false;
         }
-        
+
         /**
          * @brief Check if a path is a regular file
-         * 
+         *
          * @param path The path to check
          * @return true if the path is a regular file, false otherwise
          */
@@ -98,10 +98,10 @@ namespace interlaced::core::filesystem {
             }
             return false;
         }
-    
+
         /**
          * @brief Read the entire file into a string
-         * 
+         *
          * @param path The path of the file to read
          * @return std::string The contents of the file
          */
@@ -111,10 +111,10 @@ namespace interlaced::core::filesystem {
             buffer << file.rdbuf();
             return buffer.str();
         }
-    
+
         /**
          * @brief Write string content to a file
-         * 
+         *
          * @param path The path of the file to write
          * @param content The content to write to the file
          * @return true if successful, false otherwise
@@ -128,46 +128,46 @@ namespace interlaced::core::filesystem {
             }
             return false;
         }
-    
+
         /**
          * @brief Create a directory
-         * 
+         *
          * @param path The path of the directory to create
          * @return true if successful, false otherwise
          */
         static bool create_directory(const std::string& path) {
             return MKDIR(path.c_str(), 0777) == 0;
         }
-        
+
         /**
          * @brief Create directories recursively
-         * 
+         *
          * @param path The path of the directories to create
          * @return true if successful, false otherwise
          */
         static bool create_directories(const std::string& path) {
             // Handle empty path
             if (path.empty()) return false;
-            
+
             // Handle root directory
-            if (path == "/" || path == "\\" || 
+            if (path == "/" || path == "\\" ||
                 (path.length() == 3 && path[1] == ':' && (path[2] == '\\' || path[2] == '/'))) {
                 return true;
             }
-            
+
             // If directory already exists, return true
             if (is_directory(path)) {
                 return true;
             }
-            
+
             // Create parent directories first
             std::string parent = path;
-            
+
             // Remove trailing slashes
             while (!parent.empty() && (parent.back() == '/' || parent.back() == '\\')) {
                 parent.pop_back();
             }
-            
+
             // Find the last separator
             size_t pos = parent.find_last_of("/\\\\");
             if (pos != std::string::npos) {
@@ -178,14 +178,14 @@ namespace interlaced::core::filesystem {
                     }
                 }
             }
-            
+
             // Create this directory
             return create_directory(path);
         }
-        
+
         /**
          * @brief Remove a file or empty directory
-         * 
+         *
          * @param path The path to remove
          * @return true if successful, false otherwise
          */
@@ -202,10 +202,10 @@ namespace interlaced::core::filesystem {
                 return ::unlink(path.c_str()) == 0;
             }
         }
-        
+
         /**
          * @brief Copy a file
-         * 
+         *
          * @param source The source file path
          * @param destination The destination file path
          * @return true if successful, false otherwise
@@ -213,18 +213,18 @@ namespace interlaced::core::filesystem {
         static bool copy_file(const std::string& source, const std::string& destination) {
             std::ifstream src(source, std::ios::binary);
             std::ofstream dst(destination, std::ios::binary);
-            
+
             if (!src.is_open() || !dst.is_open()) {
                 return false;
             }
-            
+
             dst << src.rdbuf();
             return src.good() && dst.good();
         }
-        
+
         /**
          * @brief Move/rename a file or directory
-         * 
+         *
          * @param source The source path
          * @param destination The destination path
          * @return true if successful, false otherwise
@@ -232,10 +232,10 @@ namespace interlaced::core::filesystem {
         static bool rename(const std::string& source, const std::string& destination) {
             return ::rename(source.c_str(), destination.c_str()) == 0;
         }
-        
+
         /**
          * @brief Get the size of a file
-         * 
+         *
          * @param path The path of the file
          * @return The size of the file in bytes, or -1 if the file doesn't exist
          */
@@ -246,10 +246,10 @@ namespace interlaced::core::filesystem {
             }
             return -1;
         }
-        
+
         /**
          * @brief Get the last modification time of a file or directory
-         * 
+         *
          * @param path The path to check
          * @return The modification time as time_t, or -1 if the path doesn't exist
          */
@@ -260,20 +260,20 @@ namespace interlaced::core::filesystem {
             }
             return -1;
         }
-        
+
         /**
          * @brief List the contents of a directory
-         * 
+         *
          * @param path The directory path
          * @return A vector of file/directory names in the directory
          */
         static std::vector<std::string> directory_iterator(const std::string& path) {
             std::vector<std::string> result;
-            
+
 #ifdef _WIN32
             WIN32_FIND_DATAA findData;
             HANDLE hFind = FindFirstFileA((path + "\\\\*").c_str(), &findData);
-            
+
             if (hFind != INVALID_HANDLE_VALUE) {
                 do {
                     std::string filename(findData.cFileName);
@@ -296,13 +296,13 @@ namespace interlaced::core::filesystem {
                 closedir(dir);
             }
 #endif
-            
+
             return result;
         }
-        
+
         /**
          * @brief Get the system's temporary directory path
-         * 
+         *
          * @return The temporary directory path
          */
         static std::string temp_directory_path() {
@@ -318,10 +318,10 @@ namespace interlaced::core::filesystem {
             return "/tmp";
 #endif
         }
-        
+
         /**
          * @brief Get the current working directory
-         * 
+         *
          * @return The current working directory path
          */
         static std::string current_path() {
@@ -338,10 +338,10 @@ namespace interlaced::core::filesystem {
 #endif
             return "";
         }
-        
+
         /**
          * @brief Change the current working directory
-         * 
+         *
          * @param path The path to change to
          * @return true if successful, false otherwise
          */

@@ -1,6 +1,6 @@
 /*
  * Interlaced Core Library
- * Copyright (c) 2025 Your Name or Organization
+ * Copyright (c) 2025 Interlaced Pixel
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -34,7 +34,7 @@ namespace interlaced::core::json {
 
     /**
      * @brief Simple JSON parser and generator
-     * 
+     *
      * This class provides basic JSON parsing and generation functionality.
      * Note: This is a simplified implementation for demonstration purposes.
      */
@@ -42,7 +42,7 @@ namespace interlaced::core::json {
     public:
         /**
          * @brief Parse JSON string into map
-         * 
+         *
          * @param json_str The JSON string to parse
          * @return std::map<std::string, std::string> Parsed key-value pairs
          */
@@ -52,10 +52,10 @@ namespace interlaced::core::json {
             // In a real implementation, this would be more robust
             return result;
         }
-    
+
         /**
          * @brief Convert map to JSON string
-         * 
+         *
          * @param data The key-value pairs to convert to JSON
          * @return std::string The JSON string representation
          */
@@ -71,10 +71,10 @@ namespace interlaced::core::json {
             oss << "}";
             return oss.str();
         }
-    
+
         /**
          * @brief Validate JSON string
-         * 
+         *
          * @param json_str The JSON string to validate
          * @return true if the string is valid JSON, false otherwise
          */
