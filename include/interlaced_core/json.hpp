@@ -30,60 +30,68 @@
 #include <sstream>
 #include <iostream>
 
-namespace interlaced::core::json {
+namespace interlaced {
 
-    /**
-     * @brief Simple JSON parser and generator
-     *
-     * This class provides basic JSON parsing and generation functionality.
-     * Note: This is a simplified implementation for demonstration purposes.
-     */
-    class JSON {
-    public:
-        /**
-         * @brief Parse JSON string into map
-         *
-         * @param json_str The JSON string to parse
-         * @return std::map<std::string, std::string> Parsed key-value pairs
-         */
-        static std::map<std::string, std::string> parse(const std::string& json_str) {
-            std::map<std::string, std::string> result;
-            // Simplified JSON parsing implementation
-            // In a real implementation, this would be more robust
-            return result;
+    namespace core {
+
+        namespace json {
+
+            /**
+             * @brief Simple JSON parser and generator
+             *
+             * This class provides basic JSON parsing and generation functionality.
+             * Note: This is a simplified implementation for demonstration purposes.
+             */
+            class JSON {
+            public:
+                /**
+                 * @brief Parse JSON string into map
+                 *
+                 * @param json_str The JSON string to parse
+                 * @return std::map<std::string, std::string> Parsed key-value pairs
+                 */
+                static std::map<std::string, std::string> parse(const std::string& json_str) {
+                    std::map<std::string, std::string> result;
+                    // Simplified JSON parsing implementation
+                    // In a real implementation, this would be more robust
+                    return result;
+                }
+
+                /**
+                 * @brief Convert map to JSON string
+                 *
+                 * @param data The key-value pairs to convert to JSON
+                 * @return std::string The JSON string representation
+                 */
+                static std::string stringify(const std::map<std::string, std::string>& data) {
+                    std::ostringstream oss;
+                    oss << "{";
+                    bool first = true;
+                    for (const auto& pair : data) {
+                        if (!first) oss << ",";
+                        oss << "\"" << pair.first << "\":\"" << pair.second << "\"";
+                        first = false;
+                    }
+                    oss << "}";
+                    return oss.str();
+                }
+
+                /**
+                 * @brief Validate JSON string
+                 *
+                 * @param json_str The JSON string to validate
+                 * @return true if the string is valid JSON, false otherwise
+                 */
+                static bool validate(const std::string& json_str) {
+                    // Simplified JSON validation
+                    // In a real implementation, this would be more thorough
+                    return !json_str.empty();
+                }
+            };
+
         }
 
-        /**
-         * @brief Convert map to JSON string
-         *
-         * @param data The key-value pairs to convert to JSON
-         * @return std::string The JSON string representation
-         */
-        static std::string stringify(const std::map<std::string, std::string>& data) {
-            std::ostringstream oss;
-            oss << "{";
-            bool first = true;
-            for (const auto& pair : data) {
-                if (!first) oss << ",";
-                oss << "\"" << pair.first << "\":\"" << pair.second << "\"";
-                first = false;
-            }
-            oss << "}";
-            return oss.str();
-        }
-
-        /**
-         * @brief Validate JSON string
-         *
-         * @param json_str The JSON string to validate
-         * @return true if the string is valid JSON, false otherwise
-         */
-        static bool validate(const std::string& json_str) {
-            // Simplified JSON validation
-            // In a real implementation, this would be more thorough
-            return !json_str.empty();
-        }
-    };
+    }
 
 }
 
